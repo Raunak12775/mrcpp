@@ -40,7 +40,7 @@
 #include "utils/math_utils.h"
 #include "utils/periodic_utils.h"
 #include "utils/tree_utils.h"
-
+#include "fstream" // rafa
 using namespace Eigen;
 
 namespace mrcpp {
@@ -73,6 +73,59 @@ template <int D> void MWTree<D>::deleteRootNodes() {
         root.dealloc();
         this->rootBox.clearNode(i);
     }
+}
+
+
+/** @brief Serialize a tree metadata to a file
+ * 
+ * @details Coming soon
+*/
+template <int D> void MWTree<D>::serialize(const std::string filename){
+    
+    // making a stream object
+    const auto lowerbound = this->getMRA().getWorldBox().getLowerBound(0);
+    const auto upperbound = this->getMRA().getWorldBox().getUpperBound(0);
+    const auto order0 = this->getMRA().getOrder();
+    
+    std::ofstream ofs;
+    ofs.open(filename);
+    ofs.precision(12);
+    std::cout.precision(12);
+    std::cout << "Dimension of the problem is : " << D << std::endl;
+     
+    std::cout << "k value : " << lowerbound << " " << upperbound << std::endl;
+    std::cout << "order of the polynomial: " << order0 << std::endl;
+    std::cout << "cardinality of scaling function space: " << order0 + 1 << std::endl;
+    // TreeIterator<D> it(*this, TopDown);
+    // while (it.next()) {
+    for(auto *node : *this-> getEndNodeTable()){
+        // MWNode<D> node = it.getNode();
+        const NodeIndex<D> &index = node->getNodeIndex();
+        const int ncoefs = node->getNCoefs();
+        node->mwTransform(Reconstruction);
+        node->cvTransform(Forward);
+        // std::vector<double> v(k+1);
+        double *coefs = node->getCoefs();
+        int n = index.getScale();
+        std::array<int, D> l = index.getTranslation();
+        bool hasChildren = node->isBranchNode();
+        std::cout << n << " " << l[0] << " " << hasChildren << "\t";
+        for (int i = 0; i < ncoefs; ++i){std::cout << coefs[i] << "\t";}
+        std::cout << std::endl;
+        // std::cout << "number of coefficients: " << node.getNCoefs() <<std::endl;
+
+        node->cvTransform(Backward);
+        node->mwTransform(Compression);
+    }
+    ofs.close();
+}
+
+/** @brief Deserialize a tree metadata from a file
+ * 
+ * @details Coming soon
+*/
+template <int D> void MWTree<D>::deserialize(){
+
 }
 
 /** @brief Remove all nodes in the tree
