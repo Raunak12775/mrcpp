@@ -41,6 +41,7 @@
 #include "utils/periodic_utils.h"
 #include "utils/tree_utils.h"
 #include "fstream" // rafa
+// #include "utils/io_utils.h" // rafa
 using namespace Eigen;
 
 namespace mrcpp {
@@ -78,7 +79,13 @@ template <int D> void MWTree<D>::deleteRootNodes() {
 
 /** @brief Serialize a tree metadata to a file
  * 
- * @details Coming soon
+ * @details Store the dimension of the problem, scaling function space size, 
+ * order of the polynomial, level index, translation index,
+ * a node having children or not, function values corresponding to the node into a file. 
+ * 
+ * @param[in] filename: Desired filename as a `std::string`
+ * 
+ * @returns: nothing
 */
 template <int D> void MWTree<D>::serialize(const std::string filename){
     
@@ -86,36 +93,53 @@ template <int D> void MWTree<D>::serialize(const std::string filename){
     const auto lowerbound = this->getMRA().getWorldBox().getLowerBound(0);
     const auto upperbound = this->getMRA().getWorldBox().getUpperBound(0);
     const auto order0 = this->getMRA().getOrder();
+    const int size=2 * (order0 + 1);
     
     std::ofstream ofs;
     ofs.open(filename);
     ofs.precision(12);
     std::cout.precision(12);
-    std::cout << "Dimension of the problem is : " << D << std::endl;
-     
-    std::cout << "k value : " << lowerbound << " " << upperbound << std::endl;
-    std::cout << "order of the polynomial: " << order0 << std::endl;
-    std::cout << "cardinality of scaling function space: " << order0 + 1 << std::endl;
-    // TreeIterator<D> it(*this, TopDown);
-    // while (it.next()) {
-    for(auto *node : *this-> getEndNodeTable()){
-        // MWNode<D> node = it.getNode();
-        const NodeIndex<D> &index = node->getNodeIndex();
-        const int ncoefs = node->getNCoefs();
-        node->mwTransform(Reconstruction);
-        node->cvTransform(Forward);
-        // std::vector<double> v(k+1);
-        double *coefs = node->getCoefs();
+    std::cout << "Writing to a file : " << filename << std::endl;
+    //ofs << D << std::endl; // dimension of the problem
+    ofs << lowerbound << " " << upperbound << std::endl; // cell size
+    ofs << order0 << std::endl; // order of the polynomial
+    ofs << size << std::endl; // size of the scaling function space
+    TreeIterator<D> it(*this, TopDown);
+    while (it.next()) {
+    // for(auto *node : *this-> getEndNodeTable()){
+        MWNode<D> &node = it.getNode();
+        const NodeIndex<D> &index = node.getNodeIndex();
+        const int ncoefs = node.getNCoefs();
+        // node.mwTransform(Reconstruction);
+        node.cvTransform(Forward);
+        double *coefs = node.getCoefs();
         int n = index.getScale();
         std::array<int, D> l = index.getTranslation();
-        bool hasChildren = node->isBranchNode();
+        bool hasChildren = node.isBranchNode();
+        // ofs << n + 1 << " " << 2*l[0] << " " << hasChildren << "\t";
+        ofs << n << " " << l[0] << " " << hasChildren << "\t";
         std::cout << n << " " << l[0] << " " << hasChildren << "\t";
-        for (int i = 0; i < ncoefs; ++i){std::cout << coefs[i] << "\t";}
+        // condition whether the only the child values are important
+        if(hasChildren==true){
+            ofs << " "; std::cout << " ";
+        }
+        else{
+        for(int i = 0; i < ncoefs; ++i){ofs << coefs[i] << "\t"; std::cout << coefs[i] << "\t";}
+        }
+        // // for (int i = 0; i < ncoefs/2 ; ++i){
+        //     ofs << coefs[i] << "\t";
+        // }
+        // ofs << std::endl;
+        // ofs << n + 1 << " " << 2*l[0] + 1 << " " << hasChildren << "\t";
+        
+        // for (int j = ncoefs/2; j < ncoefs; ++j){
+        //     ofs << coefs[j] << "\t";
+        // }
         std::cout << std::endl;
-        // std::cout << "number of coefficients: " << node.getNCoefs() <<std::endl;
+        ofs << std::endl;
 
-        node->cvTransform(Backward);
-        node->mwTransform(Compression);
+        node.cvTransform(Backward);
+        // node.mwTransform(Compression);
     }
     ofs.close();
 }
@@ -123,9 +147,72 @@ template <int D> void MWTree<D>::serialize(const std::string filename){
 /** @brief Deserialize a tree metadata from a file
  * 
  * @details Coming soon
+ * 
 */
-template <int D> void MWTree<D>::deserialize(){
+template <int D> std::vector<MWData<D>> MWTree<D>::deserialize(const std::string filename){
+    // variables
+    std::vector<MWData<D>> test;
+    double lowerbound, upperbound;
+    int ndim, order_poly_max, scal_fn_size;
+    int n, l;
+    bool child;
+    std::vector<double> function_values;
+    
+    std::ifstream ifs;
+    ifs.open(filename);
+    std::cout.precision(12);
+    ifs.precision(12);
 
+    if (!ifs)
+    {
+        std::cout << "file does not exist";
+    }
+    else
+    {
+        std::cout << "File exists and reading started" << std::endl;
+        ifs >> ndim >> lowerbound >> upperbound;
+        ifs >> order_poly_max;
+        ifs >> scal_fn_size;
+        std::cout << ndim << "\n" << lowerbound << " " << upperbound << std::endl;
+        std::cout << order_poly_max << std::endl;
+        std::cout << scal_fn_size << std::endl;
+        
+            // auto corner = std::array<int, D>{};                                                 //
+            // auto boxes = std::array<int, D>{1};                                                 // no. of boxes
+            // auto world = BoundingBox<D>(0, corner, boxes, std::array<double, 1>{upperbound}); // working on [0,L]
+            // // Constructing basis and MRA
+            // auto basis = LegendreBasis(order_poly_max);
+            // auto MRA = MultiResolutionAnalysis<D>(world, basis);
+        
+        // continuous data starts
+        while (ifs >> n >> l >> child)
+        {
+            std::cout << "n: " << n << " l: " << l << " c: " << child << " ";
+
+            double val;
+            for (int i = 0; i < scal_fn_size; ++i)
+            {
+                ifs >> val;
+                function_values.push_back(val);
+            }
+
+            // Here do such that it goes to back to one level back 
+            
+            
+
+            // Print the values
+            for (double i : function_values)
+            {
+                std::cout << i << " ";
+            }
+            std::cout << "\n";
+
+            function_values.clear(); // clear the vector
+        }
+    }
+
+    ifs.close();
+return test;
 }
 
 /** @brief Remove all nodes in the tree

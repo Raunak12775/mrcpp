@@ -35,6 +35,7 @@
 #include "MultiResolutionAnalysis.h"
 #include "NodeAllocator.h"
 #include "NodeBox.h"
+#include "utils/MWData.h"
 
 namespace mrcpp {
 
@@ -113,12 +114,12 @@ public:
 
     void makeMaxSquareNorms(); // sets values for maxSquareNorm and maxWSquareNorm in all nodes
     void serialize(const std::string filename); // serialize tree info to a file :: RAFA
-    void deserialize(); // decode the tree info from a file  :: RAFA
+    std::vector<MWData<D>> deserialize(const std::string filename); // decode the tree info from a file  :: RAFA
     NodeAllocator<D> &getNodeAllocator() { return *this->nodeAllocator_p; }
     const NodeAllocator<D> &getNodeAllocator() const { return *this->nodeAllocator_p; }
     MWNodeVector<D> endNodeTable;          ///< Final projected nodes
 
-    friend std::ostream &operator<<(std::ostream &o, const MWTree<D> &tree) { return tree.print(o); }
+    friend std::ostream &operator<<(std::ostream &o, const MWTree<D> &tree) { return tree.print(o);}
 
     friend class MWNode<D>;
     friend class FunctionNode<D>;
