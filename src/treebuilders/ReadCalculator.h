@@ -31,13 +31,11 @@ namespace mrcpp {
 
 template <int D> class ReadCalculator final : public TreeCalculator<D> {
 public:
-    ReadCalculator(const RepresentableFunction<D> &inp_func, const std::array<double, D> &sf)
-            : func(&inp_func)
-            , scaling_factor(sf) {}
+    ReadCalculator(const std::map<std::vector<int>, std::vector<double>> &mapdata)
+            : mapdata(mapdata) {}
 
 private:
-    const RepresentableFunction<D> *func;
-    const std::array<double, D> scaling_factor;
+    const std::map<std::vector<int>, std::vector<double>> mapdata;
     void calcNode(MWNode<D> &node) override;
 };
 

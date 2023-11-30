@@ -82,13 +82,15 @@ template <int D> void project(double prec, FunctionTree<D> &out, std::function<d
  *
  */
 template <int D> void project(double prec, FunctionTree<D> &out, RepresentableFunction<D> &inp, int maxIter, bool absPrec) {
+// template <int D> void read(double prec, FunctionTree<D> &out, const std::string &filename, int maxIter, bool absPrec) {
 
     int maxScale = out.getMRA().getMaxScale();
     const auto scaling_factor = out.getMRA().getWorldBox().getScalingFactors();
     TreeBuilder<D> builder;
     WaveletAdaptor<D> adaptor(prec, maxScale, absPrec);
-
+    // create a map
     ProjectionCalculator<D> calculator(inp, scaling_factor);
+    //ReadCalculator<D> calculator(map);
 
     builder.build(out, calculator, adaptor, maxIter);
 

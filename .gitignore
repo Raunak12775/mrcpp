@@ -113,3 +113,6 @@ venv
 
 #VSCode
 .vscode/
+
+# Rafa
+old.build/

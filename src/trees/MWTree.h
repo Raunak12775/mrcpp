@@ -113,8 +113,12 @@ public:
     int getIx(NodeIndex<D> nIdx); // gives serialIx of a stored node from its NodeIndex if isLocal
 
     void makeMaxSquareNorms(); // sets values for maxSquareNorm and maxWSquareNorm in all nodes
-    void serialize(const std::string filename); // serialize tree info to a file :: RAFA
-    std::vector<MWData<D>> deserialize(const std::string filename); // decode the tree info from a file  :: RAFA
+
+    // Raunak Farhaz
+    void Serialize(const std::string filename); // serialize tree info to a file :: RAFA
+    std::map<NodeIndex<D>,std::vector<double>> extractTreeData(const std::string filename); // decode the tree info from a file  :: RAFA
+    std::map<NodeIndex<D>,std::vector<double>> treeVector2Map(const std::vector<MWData<D>>& DataSet); // convert vector to map :: RAFA
+
     NodeAllocator<D> &getNodeAllocator() { return *this->nodeAllocator_p; }
     const NodeAllocator<D> &getNodeAllocator() const { return *this->nodeAllocator_p; }
     MWNodeVector<D> endNodeTable;          ///< Final projected nodes

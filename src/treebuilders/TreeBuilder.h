@@ -32,6 +32,7 @@ namespace mrcpp {
 template <int D> class TreeBuilder final {
 public:
     void build(MWTree<D> &tree, TreeCalculator<D> &calculator, TreeAdaptor<D> &adaptor, int maxIter) const;
+    //void buildFromFile(MWTree<D> &tree, ReadCalculator<D> &calculator, TreeAdaptor<D> &adaptor, int maxIter) const; // RAFA
     void clear(MWTree<D> &tree, TreeCalculator<D> &calculator) const;
     void calc(MWTree<D> &tree, TreeCalculator<D> &calculator) const;
     int split(MWTree<D> &tree, TreeAdaptor<D> &adaptor, bool passCoefs) const;

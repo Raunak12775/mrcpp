@@ -32,15 +32,15 @@
 #include "MWTree.h"
 
 #include "MWNode.h"
-#include "NodeIndex.h"
-#include "TreeIterator.h"
 #include "MultiResolutionAnalysis.h"
 #include "NodeAllocator.h"
+#include "NodeIndex.h"
+#include "TreeIterator.h"
+#include "fstream" // rafa
 #include "utils/Printer.h"
 #include "utils/math_utils.h"
 #include "utils/periodic_utils.h"
 #include "utils/tree_utils.h"
-#include "fstream" // rafa
 // #include "utils/io_utils.h" // rafa
 using namespace Eigen;
 
@@ -76,144 +76,197 @@ template <int D> void MWTree<D>::deleteRootNodes() {
     }
 }
 
-
-/** @brief Serialize a tree metadata to a file
- * 
- * @details Store the dimension of the problem, scaling function space size, 
+/** @brief Serialize a tree metadata to a file :: RAFA
+ *
+ * @details Store the dimension of the problem, scaling function space size,
  * order of the polynomial, level index, translation index,
- * a node having children or not, function values corresponding to the node into a file. 
- * 
+ * a node having children or not, function values corresponding to the node into a file.
+ *
  * @param[in] filename: Desired filename as a `std::string`
- * 
+ *
  * @returns: nothing
-*/
-template <int D> void MWTree<D>::serialize(const std::string filename){
-    
-    // making a stream object
+ */
+template <int D> void MWTree<D>::Serialize(const std::string filename) {
+
     const auto lowerbound = this->getMRA().getWorldBox().getLowerBound(0);
     const auto upperbound = this->getMRA().getWorldBox().getUpperBound(0);
     const auto order0 = this->getMRA().getOrder();
-    const int size=2 * (order0 + 1);
-    
+    const int size = pow(2 * (order0 + 1),D);
+    std::cout << "number of scaling functions: " << size << std::endl; 
     std::ofstream ofs;
     ofs.open(filename);
     ofs.precision(12);
     std::cout.precision(12);
-    std::cout << "Writing to a file : " << filename << std::endl;
-    //ofs << D << std::endl; // dimension of the problem
+    
     ofs << lowerbound << " " << upperbound << std::endl; // cell size
-    ofs << order0 << std::endl; // order of the polynomial
-    ofs << size << std::endl; // size of the scaling function space
+    //std::cout << lowerbound << " " << upperbound << std::endl; // cell size
+    ofs << order0 << std::endl;                          // order of the polynomial
+    //std::cout << order0 << std::endl;                          // order of the polynomial
+    ofs << size << std::endl;                            // size of the scaling function space
+    //std::cout << size << std::endl;                            // size of the scaling function space
+    
     TreeIterator<D> it(*this, TopDown);
     while (it.next()) {
     // for(auto *node : *this-> getEndNodeTable()){
         MWNode<D> &node = it.getNode();
         const NodeIndex<D> &index = node.getNodeIndex();
         const int ncoefs = node.getNCoefs();
-        // node.mwTransform(Reconstruction);
+        node.mwTransform(Reconstruction); // I need to reconstruct them bcoz it is assumed that it should be in this form
         node.cvTransform(Forward);
         double *coefs = node.getCoefs();
         int n = index.getScale();
         std::array<int, D> l = index.getTranslation();
         bool hasChildren = node.isBranchNode();
         // ofs << n + 1 << " " << 2*l[0] << " " << hasChildren << "\t";
-        ofs << n << " " << l[0] << " " << hasChildren << "\t";
-        std::cout << n << " " << l[0] << " " << hasChildren << "\t";
+        // for (int ndim = 0; ndim < D; ndim++){
+        ofs << n << " ";
+        //std::cout << n << " ";
+        for(int ndim = 0; ndim < D; ndim++){
+            ofs << l[ndim] << " ";
+          //  std::cout<< l[ndim] << " ";
+        }
+        
+        ofs << hasChildren << "\t";
+        //std::cout << hasChildren << "\t";
+        
+        // for now we print everything
+        for (int i = 0; i < ncoefs; ++i) {
+                ofs << coefs[i] << "\t";
+          //      std::cout << coefs[i] << "\t";
+            }
+
         // condition whether the only the child values are important
-        if(hasChildren==true){
-            ofs << " "; std::cout << " ";
-        }
-        else{
-        for(int i = 0; i < ncoefs; ++i){ofs << coefs[i] << "\t"; std::cout << coefs[i] << "\t";}
-        }
+        // if (hasChildren == true) {
+        //     ofs << " ";
+        //     std::cout << " ";
+        // } else {
+        //     for (int i = 0; i < ncoefs; ++i) {
+        //         ofs << coefs[i] << "\t";
+        //         std::cout << coefs[i] << "\t";
+        //     }
+        // }
         // // for (int i = 0; i < ncoefs/2 ; ++i){
         //     ofs << coefs[i] << "\t";
         // }
         // ofs << std::endl;
         // ofs << n + 1 << " " << 2*l[0] + 1 << " " << hasChildren << "\t";
-        
         // for (int j = ncoefs/2; j < ncoefs; ++j){
         //     ofs << coefs[j] << "\t";
         // }
-        std::cout << std::endl;
+        //std::cout << std::endl;
         ofs << std::endl;
 
         node.cvTransform(Backward);
-        // node.mwTransform(Compression);
+        node.mwTransform(Compression);
     }
     ofs.close();
+    std::cout << "The tree has been saved in the file named : " << filename << std::endl; 
 }
 
-/** @brief Deserialize a tree metadata from a file
- * 
+/** @brief Convert the vector data of nodes to a map :: RAFA
+ *
  * @details Coming soon
- * 
-*/
-template <int D> std::vector<MWData<D>> MWTree<D>::deserialize(const std::string filename){
-    // variables
-    std::vector<MWData<D>> test;
-    double lowerbound, upperbound;
-    int ndim, order_poly_max, scal_fn_size;
-    int n, l;
-    bool child;
-    std::vector<double> function_values;
-    
-    std::ifstream ifs;
-    ifs.open(filename);
-    std::cout.precision(12);
-    ifs.precision(12);
+ *
+ */
+// template <int D> std::map<NodeIndex<D>, std::vector<double>> MWTree<D>::treeVector2Map(const std::vector<MWData<D>> &DataSet) {
 
-    if (!ifs)
-    {
-        std::cout << "file does not exist";
-    }
-    else
-    {
-        std::cout << "File exists and reading started" << std::endl;
-        ifs >> ndim >> lowerbound >> upperbound;
-        ifs >> order_poly_max;
-        ifs >> scal_fn_size;
-        std::cout << ndim << "\n" << lowerbound << " " << upperbound << std::endl;
-        std::cout << order_poly_max << std::endl;
-        std::cout << scal_fn_size << std::endl;
-        
-            // auto corner = std::array<int, D>{};                                                 //
-            // auto boxes = std::array<int, D>{1};                                                 // no. of boxes
-            // auto world = BoundingBox<D>(0, corner, boxes, std::array<double, 1>{upperbound}); // working on [0,L]
-            // // Constructing basis and MRA
-            // auto basis = LegendreBasis(order_poly_max);
-            // auto MRA = MultiResolutionAnalysis<D>(world, basis);
-        
-        // continuous data starts
-        while (ifs >> n >> l >> child)
-        {
-            std::cout << "n: " << n << " l: " << l << " c: " << child << " ";
+//     std::map<NodeIndex<D>, std::vector<double>> treemap;
+//     // std::array<int,D> Translation_Array{0}; 
 
-            double val;
-            for (int i = 0; i < scal_fn_size; ++i)
-            {
-                ifs >> val;
-                function_values.push_back(val);
-            }
+//     for (int i = 0; i < DataSet.size(); ++i) {
 
-            // Here do such that it goes to back to one level back 
-            
-            
+//         NodeIndex<D> idx(DataSet[i].Level,DataSet[i].Translation_Array); // define Translation_Array
+//         treemap[idx] = DataSet[i].FnValue; 
+//         }
+//     // {n,lx,ly,lz} -> {Func_val}
 
-            // Print the values
-            for (double i : function_values)
-            {
-                std::cout << i << " ";
-            }
-            std::cout << "\n";
+//     std::map<NodeIndex<D>, std::vector<double>>::iterator iter;
 
-            function_values.clear(); // clear the vector
-        }
-    }
+//     for (iter = treemap.begin(); iter != treemap.end(); ++iter) {
+//         for (auto key : iter->first) { std::cout << key << " "; }
 
-    ifs.close();
-return test;
+//         for (auto value : iter->second) { std::cout << value << " "; }
+//         std::cout << std::endl;
+//     }
+//     return treemap;
+// }
+
+template<int D>
+std::istream& operator>>(std::istream& is,std::array<int,D> l){
+    for(int i = 0; i < D; i++)
+        is >> l[i];
+    return is;
 }
+
+/** @brief Deserialize tree from a file :: RAFA
+ *
+ * @details Coming soon
+ *
+ */
+// template <int D> std::map<NodeIndex<D>, std::vector<double>> MWTree<D>::extractTreeData(const std::string filename) {
+//     // variables
+//     std::map<NodeIndex<D>, std::vector<double>> datasetmap;
+//     std::vector<MWData<D>> dataset;
+//     double lowerbound, upperbound;
+//     int ndim, order_poly_max, scal_fn_size;
+//     int n;
+//     std::array<int,D> l;
+//     bool child;
+//     std::vector<double> function_values;
+
+//     std::ifstream ifs;
+//     ifs.open(filename);
+//     std::cout.precision(12);
+//     ifs.precision(12);
+
+//     if (!ifs) {
+//         std::cout << "file does not exist";
+//     } else {
+//         std::cout << "File exists and reading started" << std::endl;
+//         ifs >> ndim >> lowerbound >> upperbound;
+//         ifs >> order_poly_max;
+//         ifs >> scal_fn_size;
+//         std::cout << ndim << "\n" << lowerbound << " " << upperbound << std::endl;
+//         std::cout << order_poly_max << std::endl;
+//         std::cout << scal_fn_size << std::endl;
+//         //bool decision = true;
+//         // continuous data starts
+//         while (ifs >> n >> l[0]  >> child) {
+//         // while(decision) {
+//             decision &= ifs >> n;
+            
+            
+//             for(int d=0; d<D;d++)
+//                 decision &= ifs >> l[d];
+            
+//             decision &= ifs >> child;
+
+//             /// ifs >> n >> l >> child
+
+//             // std::cout << "n: " << n << " l: " << l << " c: " << child << " ";
+//             double tmp_value;
+//             if (child == 1) {
+//                 function_values.push_back(0.0);
+//                 // std::cout << "no function values" << std::endl;
+//                 MWData<D> data1(n, l, child, function_values);
+//                 dataset.push_back(data1);
+//                 function_values.clear();
+//             } else if (child == 0) {
+//                 for (int i = 0; i < scal_fn_size; ++i) {
+//                     ifs >> tmp_value;
+//                     function_values.push_back(tmp_value);
+//                 }
+//                 MWData<D> data0(n, l, child, function_values);
+//                 dataset.push_back(data0);
+//                 function_values.clear(); // clear the vector
+//             }
+//         }
+//     }
+
+//     ifs.close();
+//     datasetmap = treeVector2Map(dataset);
+//     return datasetmap;
+// }
 
 /** @brief Remove all nodes in the tree
  *
@@ -589,8 +642,10 @@ template <int D> void MWTree<D>::makeMaxSquareNorms() {
 /** gives serialIx of a node from its NodeIndex */
 template <int D> int MWTree<D>::getIx(NodeIndex<D> nIdx) {
     if (this->isLocal == false) MSG_ERROR("getIx only implemented in local representation");
-    if(NodeIndex2serialIx.count(nIdx) == 0) return -1;
-    else return NodeIndex2serialIx[nIdx];
+    if (NodeIndex2serialIx.count(nIdx) == 0)
+        return -1;
+    else
+        return NodeIndex2serialIx[nIdx];
 }
 
 template class MWTree<1>;

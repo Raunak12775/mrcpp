@@ -32,6 +32,7 @@
 #include "utils/Printer.h"
 #include "utils/Timer.h"
 #include "utils/tree_utils.h"
+#include "ReadCalculator.h"
 
 namespace mrcpp {
 

@@ -25,27 +25,35 @@
 
 #include "ReadCalculator.h"
 #include "trees/MWNode.h"
+#include "trees/MWTree.h"
 
 using Eigen::MatrixXd;
 
 namespace mrcpp {
 
 template <int D> void ReadCalculator<D>::calcNode(MWNode<D> &node) {
-    MatrixXd exp_pts;
-    node.getExpandedChildPts(exp_pts);
+    // MatrixXd exp_pts;
+    // node.getExpandedChildPts(exp_pts);
 
-    assert(exp_pts.cols() == node.getNCoefs());
+    // assert(exp_pts.cols() == node.getNCoefs());
 
-    Coord<D> r;
-    double *coefs = node.getCoefs();
-    for (int i = 0; i < node.getNCoefs(); i++) {
-        for (int d = 0; d < D; d++) { r[d] = scaling_factor[d] * exp_pts(d, i); }
-        coefs[i] = this->func->evalf(r);
-    }
-    node.cvTransform(Backward);
-    node.mwTransform(Compression);
-    node.setHasCoefs();
-    node.calcNorms();
+    //Coord<D> r;
+    //double *coefs = node.getCoefs();
+    // assert the values of map to nodes
+    // correct position in map
+   // auto indx=node.getNodeIndex();
+    //auto &function_val=mapdata[indx]; 
+    // key :: NodeIndex -> value :: {Func_val}
+    //mapdata[indx] // return the function val vector
+    // assign `coeffs[i]=func_val[i];`
+    // for (int i = 0; i < node.getNCoefs(); i++) {
+    //     coefs[i] = function_val[i];
+    // }
+    
+    // node.cvTransform(Backward);
+    // node.mwTransform(Compression);
+    // node.setHasCoefs();
+    // node.calcNorms();
 }
 
 template class ReadCalculator<1>;
