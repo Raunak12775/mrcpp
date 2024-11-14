@@ -23,23 +23,43 @@
  * <https://mrcpp.readthedocs.io/>
  */
 
-#pragma once
+// Author : Raunak Farhaz
 
-#include "MRCPP/mrcpp_declarations.h"
+#include "ReadCalculator.h"
+#include "trees/MWNode.h"
+#include "trees/MWTree.h"
+
+using Eigen::MatrixXd;
 
 namespace mrcpp {
 
-template <int D> class TreeBuilder final {
-public:
-    void build(MWTree<D> &tree, TreeCalculator<D> &calculator, TreeAdaptor<D> &adaptor, int maxIter) const;
-    //void buildFromFile(MWTree<D> &tree, ReadCalculator<D> &calculator, TreeAdaptor<D> &adaptor, int maxIter) const; // RAFA
-    void clear(MWTree<D> &tree, TreeCalculator<D> &calculator) const;
-    void calc(MWTree<D> &tree, TreeCalculator<D> &calculator) const;
-    int split(MWTree<D> &tree, TreeAdaptor<D> &adaptor, bool passCoefs) const;
+template <int D> void ReadCalculator<D>::calcNode(MWNode<D> &node) {
+    // MatrixXd exp_pts;
+    // node.getExpandedChildPts(exp_pts);
 
-private:
-    double calcScalingNorm(const MWNodeVector<D> &vec) const;
-    double calcWaveletNorm(const MWNodeVector<D> &vec) const;
-};
+    // assert(exp_pts.cols() == node.getNCoefs());
+
+    //Coord<D> r;
+    //double *coefs = node.getCoefs();
+    // assert the values of map to nodes
+    // correct position in map
+   // auto indx=node.getNodeIndex();
+    //auto &function_val=mapdata[indx]; 
+    // key :: NodeIndex -> value :: {Func_val}
+    //mapdata[indx] // return the function val vector
+    // assign `coeffs[i]=func_val[i];`
+    // for (int i = 0; i < node.getNCoefs(); i++) {
+    //     coefs[i] = function_val[i];
+    // }
+    
+    // node.cvTransform(Backward);
+    // node.mwTransform(Compression);
+    // node.setHasCoefs();
+    // node.calcNorms();
+}
+
+template class ReadCalculator<1>;
+template class ReadCalculator<2>;
+template class ReadCalculator<3>;
 
 } // namespace mrcpp

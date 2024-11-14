@@ -23,23 +23,22 @@
  * <https://mrcpp.readthedocs.io/>
  */
 
+// Author : Raunak Farhaz
+
 #pragma once
 
-#include "MRCPP/mrcpp_declarations.h"
+#include "TreeCalculator.h"
 
 namespace mrcpp {
 
-template <int D> class TreeBuilder final {
+template <int D> class ReadCalculator final : public TreeCalculator<D> {
 public:
-    void build(MWTree<D> &tree, TreeCalculator<D> &calculator, TreeAdaptor<D> &adaptor, int maxIter) const;
-    //void buildFromFile(MWTree<D> &tree, ReadCalculator<D> &calculator, TreeAdaptor<D> &adaptor, int maxIter) const; // RAFA
-    void clear(MWTree<D> &tree, TreeCalculator<D> &calculator) const;
-    void calc(MWTree<D> &tree, TreeCalculator<D> &calculator) const;
-    int split(MWTree<D> &tree, TreeAdaptor<D> &adaptor, bool passCoefs) const;
+    ReadCalculator(const std::map<std::vector<int>, std::vector<double>> &mapdata)
+            : mapdata(mapdata) {}
 
 private:
-    double calcScalingNorm(const MWNodeVector<D> &vec) const;
-    double calcWaveletNorm(const MWNodeVector<D> &vec) const;
+    const std::map<std::vector<int>, std::vector<double>> mapdata;
+    void calcNode(MWNode<D> &node) override;
 };
 
 } // namespace mrcpp

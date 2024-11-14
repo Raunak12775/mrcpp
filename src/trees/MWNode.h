@@ -113,7 +113,7 @@ public:
     void addCoefBlock(int block, int block_size, const double *c);
     void zeroCoefBlock(int block, int block_size);
     void attachCoefs(double *coefs);
-
+    
     void calcNorms();
     void zeroNorms();
     void clearNorms();

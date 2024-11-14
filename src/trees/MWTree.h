@@ -35,6 +35,7 @@
 #include "MultiResolutionAnalysis.h"
 #include "NodeAllocator.h"
 #include "NodeBox.h"
+#include "utils/MWData.h"
 
 namespace mrcpp {
 
@@ -138,13 +139,24 @@ public:
 
     void makeMaxSquareNorms(); // sets values for maxSquareNorm and maxWSquareNorm in all nodes
 
+    // Raunak Farhaz
+    void Serialize(const std::string filename); // serialize tree info to a file :: RAFA
+    std::map<NodeIndex<D>,std::vector<double>> extractTreeData(const std::string filename); // decode the tree info from a file  :: RAFA
+    std::map<NodeIndex<D>,std::vector<double>> treeVector2Map(const std::vector<MWData<D>>& DataSet); // convert vector to map :: RAFA
+
     NodeAllocator<D> &getNodeAllocator() { return *this->nodeAllocator_p; }
     const NodeAllocator<D> &getNodeAllocator() const { return *this->nodeAllocator_p; }
     MWNodeVector<D> endNodeTable;          ///< Final projected nodes
 
     void getNodeCoeff(NodeIndex<D> nIdx, double *data); // fetch coefficient from a specific node stored in Bank
 
-    friend std::ostream &operator<<(std::ostream &o, const MWTree<D> &tree) { return tree.print(o); }
+    friend std::ostream &operator<<(std::ostream &o, const MWTree<D> &tree) { return tree.print(o);}
+    friend std::istream &operator>>(std::istream &i, std::array<int,D> &translation){
+        for(int ndim = 0; ndim < D; ndim++){
+            i >> translation[ndim];
+        }
+        return i;
+    }
 
     friend class MWNode<D>;
     friend class FunctionNode<D>;
