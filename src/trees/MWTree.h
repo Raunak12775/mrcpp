@@ -124,6 +124,12 @@ public:
     MWNodeVector<D> endNodeTable;          ///< Final projected nodes
 
     friend std::ostream &operator<<(std::ostream &o, const MWTree<D> &tree) { return tree.print(o);}
+    friend std::istream &operator>>(std::istream &i, std::array<int,D> &translation){
+        for(int ndim = 0; ndim < D; ndim++){
+            i >> translation[ndim];
+        }
+        return i;
+    }
 
     friend class MWNode<D>;
     friend class FunctionNode<D>;

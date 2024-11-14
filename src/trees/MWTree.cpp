@@ -191,8 +191,8 @@ template <int D> void MWTree<D>::Serialize(const std::string filename) {
 //     return treemap;
 // }
 
-template<int D>
-std::istream& operator>>(std::istream& is,std::array<int,D> l){
+template<std::size_t D>
+std::istream& operator>>(std::istream& is,std::array<int,D>& l){
     for(int i = 0; i < D; i++)
         is >> l[i];
     return is;
@@ -203,70 +203,80 @@ std::istream& operator>>(std::istream& is,std::array<int,D> l){
  * @details Coming soon
  *
  */
-// template <int D> std::map<NodeIndex<D>, std::vector<double>> MWTree<D>::extractTreeData(const std::string filename) {
-//     // variables
-//     std::map<NodeIndex<D>, std::vector<double>> datasetmap;
-//     std::vector<MWData<D>> dataset;
-//     double lowerbound, upperbound;
-//     int ndim, order_poly_max, scal_fn_size;
-//     int n;
-//     std::array<int,D> l;
-//     bool child;
-//     std::vector<double> function_values;
+template <int D> std::map<NodeIndex<D>, std::vector<double>> MWTree<D>::extractTreeData(const std::string filename) {
+    // variables
+  //  std::map<NodeIndex<D>, std::vector<double>> datasetmap;
+    std::vector<MWData<D>> dataset;
+    double lowerbound, upperbound;
+    int order_poly_max, scal_fn_size;
+    int n;
+    constexpr std::size_t NDIM=D;
+    std::array<int,NDIM> l;
+    bool child;
+    std::vector<double> function_values;
 
-//     std::ifstream ifs;
-//     ifs.open(filename);
-//     std::cout.precision(12);
-//     ifs.precision(12);
+    std::ifstream ifs;
+    ifs.open(filename);
+    std::cout.precision(12);
+    ifs.precision(12);
 
-//     if (!ifs) {
-//         std::cout << "file does not exist";
-//     } else {
-//         std::cout << "File exists and reading started" << std::endl;
-//         ifs >> ndim >> lowerbound >> upperbound;
-//         ifs >> order_poly_max;
-//         ifs >> scal_fn_size;
-//         std::cout << ndim << "\n" << lowerbound << " " << upperbound << std::endl;
-//         std::cout << order_poly_max << std::endl;
-//         std::cout << scal_fn_size << std::endl;
-//         //bool decision = true;
-//         // continuous data starts
-//         while (ifs >> n >> l[0]  >> child) {
-//         // while(decision) {
-//             decision &= ifs >> n;
+    if (!ifs) {
+        std::cout << "file does not exist";
+    } else {
+        std::cout << "File exists and reading started" << std::endl;
+        ifs >> lowerbound >> upperbound;
+        ifs >> order_poly_max;
+        ifs >> scal_fn_size;
+        std::cout << lowerbound << " " << upperbound << std::endl;
+        std::cout << order_poly_max << std::endl;
+        std::cout << scal_fn_size << std::endl;
+        //bool decision = true;
+        // continuous data starts
+        while (ifs >> n >> l >> child){
+        // while(decision) {
+            //decision &= ifs >> n;
             
             
-//             for(int d=0; d<D;d++)
-//                 decision &= ifs >> l[d];
+            //for(int d=0; d<D;d++)
+              //  decision &= ifs >> l[d];
             
-//             decision &= ifs >> child;
+            //decision &= ifs >> child;
 
-//             /// ifs >> n >> l >> child
+            /// ifs >> n >> l >> child
 
-//             // std::cout << "n: " << n << " l: " << l << " c: " << child << " ";
-//             double tmp_value;
-//             if (child == 1) {
-//                 function_values.push_back(0.0);
-//                 // std::cout << "no function values" << std::endl;
-//                 MWData<D> data1(n, l, child, function_values);
-//                 dataset.push_back(data1);
-//                 function_values.clear();
-//             } else if (child == 0) {
-//                 for (int i = 0; i < scal_fn_size; ++i) {
-//                     ifs >> tmp_value;
-//                     function_values.push_back(tmp_value);
-//                 }
-//                 MWData<D> data0(n, l, child, function_values);
-//                 dataset.push_back(data0);
-//                 function_values.clear(); // clear the vector
-//             }
-//         }
-//     }
+            std::cout << "n: " << n << " l: " << l << " c: " << child << " ";
+            double tmp_value;
+            for (int i = 0; i < scal_fn_size; ++i)
+            {
+                ifs >> tmp_val;
+                function_values.push_back(tmp_val);
+            }
+            MWData<D> data0(n, l, child, function_values);
+            dataset.push_back(data0);
+            function_values.clear(); // clear the vector
+            
+            // if (child == 1) {
+            //     function_values.push_back(0.0);
+            //     // std::cout << "no function values" << std::endl;
+            //     MWData<D> data1(n, l, child, function_values);
+            //     dataset.push_back(data1);
+            //     function_values.clear();
+            // } else if (child == 0) {
+            //     for (int i = 0; i < scal_fn_size; ++i) {
+            //         ifs >> tmp_value;
+            //         function_values.push_back(tmp_value);
+            //     }
+            //     MWData<D> data0(n, l, child, function_values);
+            //     dataset.push_back(data0);
+            //     function_values.clear(); // clear the vector
+            // }
+        }
+    }
 
-//     ifs.close();
-//     datasetmap = treeVector2Map(dataset);
-//     return datasetmap;
-// }
+    ifs.close();
+//    datasetmap = treeVector2Map(dataset);
+    return dataset;
+}
 
 /** @brief Remove all nodes in the tree
  *

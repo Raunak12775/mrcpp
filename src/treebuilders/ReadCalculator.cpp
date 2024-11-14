@@ -23,6 +23,8 @@
  * <https://mrcpp.readthedocs.io/>
  */
 
+// Author : Raunak Farhaz
+
 #include "ReadCalculator.h"
 #include "trees/MWNode.h"
 #include "trees/MWTree.h"

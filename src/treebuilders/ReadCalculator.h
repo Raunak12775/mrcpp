@@ -23,6 +23,8 @@
  * <https://mrcpp.readthedocs.io/>
  */
 
+// Author : Raunak Farhaz
+
 #pragma once
 
 #include "TreeCalculator.h"
